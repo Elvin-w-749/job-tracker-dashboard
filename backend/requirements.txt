@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+httpx
+python-multipart
+pandas
+openpyxl
+python-docx
+chardet
