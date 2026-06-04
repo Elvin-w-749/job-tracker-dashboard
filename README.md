@@ -41,7 +41,8 @@ cd job-tracker-dashboard
 
 ### 2. Backend (FastAPI :8000)
 
-The backend is a single Python project. A virtualenv is recommended.
+The backend is a single Python project. **Python 3.10+** is required (the code
+uses modern type hints like `str | None`). A virtualenv is recommended.
 
 ```bash
 cd backend

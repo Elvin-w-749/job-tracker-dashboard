@@ -116,7 +116,7 @@ async def save_api_key(request: APIKeyRequest, db: Session = Depends(get_db), us
 
 
 @app.post("/api/settings/api-key/clear")
-async def clear_api_key(db: Session = Depends(get_db), user_id: str = Depends(get_user_id)):
+async def clear_api_key_post(db: Session = Depends(get_db), user_id: str = Depends(get_user_id)):
     db.query(UserConfig).filter(UserConfig.user_id == user_id, UserConfig.key == "minimax_api_key").delete()
     db.query(UserConfig).filter(UserConfig.user_id == user_id, UserConfig.key == "minimax_model_name").delete()
     db.commit()
@@ -255,6 +255,7 @@ async def analyze_jd(
     image: UploadFile = File(...),
     api_key: str = Depends(get_api_key),
     resume_profile: str | None = Depends(get_resume_profile),
+    model_name: str | None = Depends(get_minimax_model),
     user_id: str = Depends(get_user_id)
 ):
     if not image.content_type or not image.content_type.startswith("image/"):
@@ -510,6 +511,7 @@ async def batch_upload(
     images: list[UploadFile] = File(...),
     api_key: str = Depends(get_api_key),
     resume_profile: str | None = Depends(get_resume_profile),
+    model_name: str | None = Depends(get_minimax_model),
     db: Session = Depends(get_db),
     user_id: str = Depends(get_user_id)
 ):
@@ -787,6 +789,7 @@ async def analyze_jd_file(
     file: UploadFile = File(...),
     api_key: str = Depends(get_api_key),
     resume_profile: str | None = Depends(get_resume_profile),
+    model_name: str | None = Depends(get_minimax_model),
     user_id: str = Depends(get_user_id)
 ):
     """多格式文件智能分析入口：支持 .csv/.xlsx/.docx/.txt/.md/.png/.jpg"""
@@ -938,6 +941,7 @@ async def start_batch_score(
     db: Session = Depends(get_db),
     api_key: str = Depends(get_api_key),
     resume_profile: str | None = Depends(get_resume_profile),
+    model_name: str | None = Depends(get_minimax_model),
     user_id: str = Depends(get_user_id),
 ):
     """发起批量评分任务：为当前用户所有 match_score 为 null 的记录评分"""
@@ -981,6 +985,7 @@ async def start_single_score(
     db: Session = Depends(get_db),
     api_key: str = Depends(get_api_key),
     resume_profile: str | None = Depends(get_resume_profile),
+    model_name: str | None = Depends(get_minimax_model),
     user_id: str = Depends(get_user_id),
 ):
     """重新检测特定单条记录的匹配度"""
@@ -1137,7 +1142,7 @@ async def delete_application(app_id: int, db: Session = Depends(get_db), user_id
 # ─── API Key 清除 ─────────────────────────────────────────────────────────────
 
 @app.delete("/api/settings/api-key")
-async def clear_api_key(db: Session = Depends(get_db), user_id: str = Depends(get_user_id)):
+async def clear_api_key_delete(db: Session = Depends(get_db), user_id: str = Depends(get_user_id)):
     """清除当前用户的 API Key"""
     config = db.query(UserConfig).filter_by(user_id=user_id, key="minimax_api_key").first()
     if config:

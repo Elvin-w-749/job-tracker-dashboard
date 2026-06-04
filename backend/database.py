@@ -24,6 +24,8 @@ def migrate_add_user_id():
     inspector = inspect(engine)
     tables = ["applications", "user_config", "batch_tasks", "batch_results"]
     for table in tables:
+        if not inspector.has_table(table):
+            continue
         columns = [c["name"] for c in inspector.get_columns(table)]
         if "user_id" not in columns:
             with engine.connect() as conn:
