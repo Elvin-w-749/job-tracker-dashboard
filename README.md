@@ -1,194 +1,167 @@
-# Job Tracker Dashboard
+# 求职追踪看板 (Job Tracker Dashboard)
 
-A local-first, full-stack job-application tracking dashboard. Import your
-applications from CSV or Excel, paste a JD (text or screenshot) and let an LLM
-parse it, score the match against your resume, and visualize the whole pipeline
-on a Kanban-style analytics dashboard.
+一个本地优先、全栈架构的求职记录追踪看板。支持从 CSV 或 Excel 导入您的投递记录，支持通过直接粘贴职位描述 (JD) 文本或截图，让大模型 (LLM) 自动解析提取关键信息，并与您的简历进行匹配打分，最后通过看板视图 (Kanban) 直观地展示您的整个求职漏斗和数据分析。
 
-> Stack: **FastAPI + SQLAlchemy + SQLite** (backend) · **Next.js 14 + TypeScript +
-> Tailwind + shadcn/ui + Recharts + TanStack Query** (frontend) · **LLM-powered**
-> JD parsing and resume matching.
+> 技术栈：**FastAPI + SQLAlchemy + SQLite** (后端) · **Next.js 14 + TypeScript + Tailwind + shadcn/ui + Recharts + TanStack Query** (前端) · **LLM 驱动** 的 JD 解析与简历匹配。
 
 ---
 
-## Features
+## 核心功能
 
-- **CSV / Excel import** — bulk-import existing application records.
-- **JD smart parsing** — paste a JD as text or upload a screenshot/PDF/DOCX;
-  the LLM extracts company, position, city, salary, skills, etc. as structured
-  JSON.
-- **Resume background extraction** — upload your resume (image / DOCX / TXT / MD)
-  and the LLM produces a structured profile used for matching.
-- **Match scoring** — every parsed JD is scored 0-100 against your resume
-  profile, batch-processable.
-- **Analytics dashboard** — Recharts visualisations of status distribution,
-  city distribution, company-tier distribution, channel distribution, and
-  match-score distribution.
-- **Companies page** — card grid grouped by company tier.
-- **Multi-user data isolation** — the header `X-User-ID` scopes every API call
-  to a user; users are managed client-side via `localStorage`.
+- **CSV / Excel 导入** — 批量导入已有的求职投递记录。
+- **JD 智能解析** — 支持粘贴 JD 文本或上传截图、PDF、DOCX 文件；大语言模型将自动提取公司名称、职位、城市、薪资、技能要求等，并输出结构化 JSON 数据。
+- **简历背景提取** — 上传您的简历（支持图片、DOCX、TXT、MD 格式），大语言模型会为您生成一份用于匹配的结构化能力模型。
+- **匹配度打分** — 系统会将每一个解析后的 JD 与您的简历背景进行匹配，给出 0-100 的评分，支持批量处理。
+- **数据分析看板** — 使用 Recharts 可视化展示投递状态漏斗、城市分布、公司层级分布、渠道分布以及匹配度分布。
+- **公司图鉴** — 以卡片网格的形式展示，并按公司层级进行分组。
+- **多用户数据隔离** — 所有的 API 请求都会通过 `X-User-ID` 请求头进行隔离；前端通过 `localStorage` 在客户端管理多用户身份。
 
 ---
 
-## Quick start
+## 快速启动
 
-### 1. Clone
+### 1. 克隆项目
 
 ```bash
 git clone <your-repo-url> job-tracker-dashboard
 cd job-tracker-dashboard
 ```
 
-### 2. Backend (FastAPI :8000)
+### 2. 后端服务 (FastAPI :8000)
 
-The backend is a single Python project. **Python 3.10+** is required (the code
-uses modern type hints like `str | None`). A virtualenv is recommended.
+后端是一个纯 Python 项目。需要 **Python 3.10+** 版本（代码中使用了诸如 `str | None` 的现代类型提示）。强烈建议使用虚拟环境 (virtualenv)。
 
 ```bash
 cd backend
 python -m venv venv
-# Windows
+
+# Windows 激活虚拟环境
 venv\Scripts\activate
-# macOS / Linux
+# macOS / Linux 激活虚拟环境
 source venv/bin/activate
 
 pip install -r requirements.txt
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-The SQLite database (`backend/job_tracker.db`) is created automatically on
-first run and is **gitignored** — never commit it.
+SQLite 数据库 (`backend/job_tracker.db`) 会在第一次运行时自动创建，并且已被加入 **.gitignore** 忽略列表——请勿将其提交到 Git。
 
-### 3. Frontend (Next.js :3001)
+### 3. 前端服务 (Next.js :3001)
 
 ```bash
 cd frontend
-npm install        # or pnpm install / yarn
+npm install        # 也可以使用 pnpm install 或 yarn
 
-# (optional) override the API base URL
+# (可选) 如果需要自定义 API 地址
 cp .env.local.example .env.local
-# edit .env.local if your backend is not on http://localhost:8000
+# 如果您的后端没有运行在 http://localhost:8000，请编辑 .env.local
 
 npm run dev
 ```
 
-Open <http://localhost:3001>.
+在浏览器中打开 <http://localhost:3001>。
 
-### 4. Configure the LLM API key
+### 4. 配置 LLM API 密钥
 
-The first time you open the app, click the **Settings** gear icon in the
-dashboard and paste your **MiniMax API key** into the dialog. The key is
-stored per-user in the local SQLite database; it is **never** sent anywhere
-except to the MiniMax API endpoint.
+第一次打开系统时，点击数据看板页面的 **设置 (Settings)** 齿轮图标，在弹窗中粘贴您的 **MiniMax API 密钥**。该密钥会保存在本地 SQLite 数据库中，与用户绑定。除了请求 MiniMax 的接口外，它**绝对不会**被发送到任何其他地方。
 
-> The project is configured to work with the MiniMax (a multimodal LLM that
-> accepts both image and text inputs and returns JSON). To use a different
-> provider, edit `backend/services/minimax_service.py`.
+> 本项目默认配置使用 MiniMax (一个支持图文多模态输入并能返回 JSON 的大语言模型)。如果您想使用其他供应商，请修改 `backend/services/minimax_service.py`。
 
 ---
 
-## Project structure
+## 项目结构
 
-```
+```text
 job-tracker-dashboard/
-├── backend/                 # FastAPI app
-│   ├── main.py              # All REST routes, CORS, startup migrations
-│   ├── database.py          # SQLAlchemy engine + migration helper
-│   ├── models.py            # Application / UserConfig / BatchTask / BatchResult
-│   ├── schemas.py           # Pydantic request/response models
-│   ├── patch_model.py       # One-off model patches
-│   ├── prompts/             # LLM prompt templates (JD + resume)
+├── backend/                 # FastAPI 应用
+│   ├── main.py              # 所有的 REST 路由、跨域配置、启动时的数据库迁移
+│   ├── database.py          # SQLAlchemy 引擎配置 + 迁移辅助函数
+│   ├── models.py            # 数据表模型 (Application / UserConfig / BatchTask / BatchResult)
+│   ├── schemas.py           # Pydantic 请求/响应数据校验模型
+│   ├── prompts/             # LLM 提示词模板 (针对 JD 和简历)
 │   └── services/
-│       ├── minimax_service.py     # MiniMax LLM client (image + text)
-│       └── file_parser_service.py # CSV / Excel / DOCX / TXT parsing
-├── frontend/                # Next.js 14 App Router
+│       ├── minimax_service.py     # MiniMax LLM 客户端 (处理图文)
+│       └── file_parser_service.py # CSV / Excel / DOCX / TXT 文件解析
+├── frontend/                # Next.js 14 App Router 应用
 │   ├── app/
-│   │   ├── page.tsx         # Entry redirect
-│   │   ├── dashboard/       # Analytics dashboard
-│   │   └── companies/       # Companies grid
-│   ├── components/          # shadcn/ui components + custom widgets
-│   ├── hooks/               # React hooks
-│   ├── lib/                 # Utilities (user-context, api client, etc.)
+│   │   ├── page.tsx         # 入口重定向
+│   │   ├── dashboard/       # 数据分析看板页面
+│   │   └── companies/       # 公司图鉴网格页面
+│   ├── components/          # shadcn/ui 组件库 + 自定义业务组件
+│   ├── hooks/               # React 自定义 hooks
+│   ├── lib/                 # 工具函数 (用户信息上下文、API 客户端等)
 │   └── package.json
-├── .env.example             # Backend env template
+├── .env.example             # 后端环境变量模板
 ├── .gitignore
-├── LICENSE                  # MIT
+├── LICENSE                  # MIT 开源协议
 └── README.md
 ```
 
 ---
 
-## API overview
+## API 概览
 
-All endpoints are defined in `backend/main.py` and grouped by resource. The
-following are the most important entry points:
+所有的接口路由都定义在 `backend/main.py` 中，并按资源分类。以下是最核心的几个接口：
 
-| Method | Path | Description |
+| 请求方式 | 路径 | 描述 |
 |---|---|---|
-| `GET`  | `/api/applications` | List applications (paginated, filterable) |
-| `POST` | `/api/applications` | Create one application |
-| `POST` | `/api/applications/import` | Bulk import CSV / Excel |
-| `POST` | `/api/jd/parse-text` | Parse a JD from text |
-| `POST` | `/api/jd/parse-image` | Parse a JD from an uploaded image |
-| `POST` | `/api/resume/parse` | Parse a resume and store the profile |
-| `POST` | `/api/batch/score` | Kick off a batch match-score job |
-| `GET`  | `/api/stats/overview` | Aggregated stats for the dashboard |
-| `GET`  | `/api/settings/api-key` | Check if the API key is configured |
-| `POST` | `/api/settings/api-key` | Save the API key |
-| `POST` | `/api/settings/api-key/test` | Verify the API key is valid |
+| `GET`  | `/api/applications` | 获取投递记录列表 (支持分页和过滤) |
+| `POST` | `/api/applications` | 新增单条投递记录 |
+| `POST` | `/api/applications/import` | 批量导入 CSV / Excel |
+| `POST` | `/api/jd/parse-text` | 从文本中解析 JD |
+| `POST` | `/api/jd/parse-image` | 从上传的图片中解析 JD |
+| `POST` | `/api/resume/parse` | 解析简历并保存用户能力模型 |
+| `POST` | `/api/batch/score` | 触发批量匹配打分任务 |
+| `GET`  | `/api/stats/overview` | 获取看板所需的聚合统计数据 |
+| `GET`  | `/api/settings/api-key` | 检查是否已配置 API 密钥 |
+| `POST` | `/api/settings/api-key` | 保存 API 密钥 |
+| `POST` | `/api/settings/api-key/test` | 测试验证 API 密钥的有效性 |
 
-Interactive docs are available at <http://localhost:8000/docs> once the backend
-is running.
+后端启动后，您可以访问 <http://localhost:8000/docs> 查看交互式接口文档 (Swagger UI)。
 
 ---
 
-## Tech stack
+## 技术栈
 
-**Backend**
-- [FastAPI](https://fastapi.tiangolo.com/) — REST framework
+**后端**
+- [FastAPI](https://fastapi.tiangolo.com/) — REST 框架
 - [SQLAlchemy](https://www.sqlalchemy.org/) — ORM
-- SQLite — embedded database
-- [httpx](https://www.python-httpx.org/) — async HTTP client (LLM calls)
-- [pandas](https://pandas.pydata.org/), [openpyxl](https://openpyxl.readthedocs.io/), [python-docx](https://python-docx.readthedocs.io/) — file parsing
-- [uvicorn](https://www.uvicorn.org/) — ASGI server
+- SQLite — 轻量级嵌入式数据库
+- [httpx](https://www.python-httpx.org/) — 异步 HTTP 客户端 (用于调用大模型)
+- [pandas](https://pandas.pydata.org/), [openpyxl](https://openpyxl.readthedocs.io/), [python-docx](https://python-docx.readthedocs.io/) — 文件处理与解析
+- [uvicorn](https://www.uvicorn.org/) — ASGI 服务器
 
-**Frontend**
-- [Next.js 14](https://nextjs.org/) (App Router)
+**前端**
+- [Next.js 14](https://nextjs.org/) (App Router 模式)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
-- [Recharts](https://recharts.org/) — charts
-- [TanStack Query](https://tanstack.com/query) — data fetching
+- [Recharts](https://recharts.org/) — 图表库
+- [TanStack Query](https://tanstack.com/query) — 数据状态管理与请求缓存
 
-**LLM**
-- MiniMax (multimodal: image + text in, structured JSON out)
+**大语言模型 (LLM)**
+- MiniMax (多模态模型：支持输入图片+文本，输出结构化 JSON)
 
 ---
 
-## Configuration reference
+## 配置参考
 
-| Var | Where | Default | Purpose |
+| 变量名 | 位置 | 默认值 | 作用 |
 |---|---|---|---|
-| `NEXT_PUBLIC_API_BASE` | `frontend/.env.local` | `http://localhost:8000` | Base URL the frontend uses to call the backend |
+| `NEXT_PUBLIC_API_BASE` | `frontend/.env.local` | `http://localhost:8000` | 前端调用后端接口的基础 URL |
 
-The MiniMax API key is **not** read from an env file — it is provided at
-runtime through the Settings UI and stored per-user in SQLite.
-
----
-
-## Development notes
-
-- The backend ships with a startup migration (`migrate_add_user_id`) that
-  adds the `user_id` column to legacy databases.
-- `page_size` for the applications endpoint is capped at 5000 to prevent
-  runaway queries.
-- LLM responses may be wrapped in markdown code fences; the parser in
-  `services/minimax_service.py` strips them before JSON-decoding.
-- Resume DOCX content is read from **both** `doc.paragraphs` and
-  `doc.tables` — many real-world resumes put experience / education inside
-  tables.
+> **注意：** MiniMax 的 API 密钥**不会**从环境变量文件中读取，而是要求用户在运行时的 UI 设置页面中提供，并保存在 SQLite 数据库中。
 
 ---
 
-## License
+## 开发注意事项
 
-[MIT](./LICENSE) — see `LICENSE` for the full text.
+- 后端包含了一个启动时的自动迁移脚本 (`migrate_add_user_id`)，用于向旧数据库中补充 `user_id` 字段。
+- 获取投递记录接口的 `page_size` 被硬性限制为最大 5000，以防止数据库查询过载。
+- LLM 返回的响应有时可能会被 markdown 代码块 (`` `json ... ` ``) 包裹；`services/minimax_service.py` 中的解析器会在进行 JSON 解码之前自动剥离这些外壳。
+- 解析 DOCX 简历时，会同时读取 `doc.paragraphs` (段落) 和 `doc.tables` (表格) 的内容——因为在真实场景中，很多人的简历会使用表格来排版教育或工作经历。
+
+---
+
+## 开源协议
+
+[MIT](./LICENSE) — 详细信息请参阅 `LICENSE` 文件。
